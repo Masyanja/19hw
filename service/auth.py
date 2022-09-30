@@ -7,6 +7,8 @@ import datetime
 from flask import current_app
 
 
+# from implemented import user_service
+
 
 def __generate_password_digest(password: str) -> bytes:
     return hashlib.pbkdf2_hmac(
@@ -25,7 +27,7 @@ def compare_passwords_hash(password_hash, other_password) -> bool:
     return password_hash == generate_password_hash(other_password)
 
 
-def generate_token(username, password_hash, password, is_refresh=False):
+def generate_token(username, password_hash, password, role, is_refresh=False):
     if username is None:
         return None
 
@@ -41,14 +43,15 @@ def generate_token(username, password_hash, password, is_refresh=False):
     # 15 min for access token
     min15 = datetime.datetime.utcnow() + datetime.timedelta(minutes=current_app.config['TOKEN_EXPIRE_MINUTES'])
     data["exp"] = calendar.timegm(min15.timetuple())
+    # jwt.JWT.en
     access_token = jwt.encode(data, key=current_app.config['SECRET_KEY'],
-                              algorithm=current_app.config['ALGORITHM'])
+                                  algorithm=current_app.config['ALGORITHM'])
 
     # day for access token
     min_day = datetime.datetime.utcnow() + datetime.timedelta(minutes=current_app.config['TOKEN_EXPIRE_DAY'])
     data["exp"] = calendar.timegm(min_day.timetuple())
     refresh_token = jwt.encode(data, key=current_app.config['SECRET_KEY'],
-                               algorithm=current_app.config['ALGORITHM'])
+                                   algorithm=current_app.config['ALGORITHM'])
 
     return {
         "access_token": access_token,
@@ -56,13 +59,14 @@ def generate_token(username, password_hash, password, is_refresh=False):
     }
 
 
-def approve_token(token):
+def approve_token(token, user_service):
+
     data = jwt.decode(token, key=current_app.config['SECRET_KEY'],
-                      algorithm=current_app.config['ALGORITHM'])
+                          algorithms=current_app.config['ALGORITHM'])
 
     username = data.get("username")
     password = data.get("password")
 
     role = user_service.get_by_username(username)
-    return generate_token(username=username, password=password, password_hash=None,
+    return generate_token(username=username, password=password, password_hash=None, role=role,
                           is_refresh=True)

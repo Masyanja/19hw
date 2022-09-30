@@ -6,7 +6,7 @@ from implemented import user_service
 
 def auth_required(func):
     def wrapper(*args, **kwargs):
-        token = request.headers.environ.get('HTTP_AUTHORIZATION').replace('Beaver ', '')
+        token = request.headers.environ.get('HTTP_AUTHORIZATION').replace('Bearer ', '')
 
         if not token:
             return "Токен не пришел"
@@ -23,19 +23,19 @@ def auth_required(func):
 
 def admin_required(func):
     def wrapper(*args, **kwargs):
-        token = request.headers.environ.get('HTTP_AUTHORIZATION').replace('Beaver ', '')
+        token = request.headers.environ.get('HTTP_AUTHORIZATION').replace('Bearer ', '')
 
         if not token:
             return "Токен не пришел"
 
-        try:
-            data = jwt.decode(token, key=current_app.config['SECRET_KEY'],
+        # try:
+        data = jwt.decode(token, key=current_app.config['SECRET_KEY'],
                               algorithms=current_app.config['ALGORITHM'])
-            if user_service.get_by_username(data['username']).role == "admin":
-                return func(*args, **kwargs)
-            else:
-                return "У вас нет прав"
-        except Exception:
-            raise Exception
+        if user_service.get_by_username(data['username']).role == "admin":
+            return func(*args, **kwargs)
+        else:
+            return "У вас нет прав"
+        # except Exception:
+        #     raise Exception
 
     return wrapper
