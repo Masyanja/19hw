@@ -13,13 +13,14 @@ class AuthView(Resource):
         username = data.get("username")
         password = data.get("password")
 
-        if username or not password:
+        if not username or not password:
             return "Нет пароля или логина", 400
 
         user = user_service.get_by_username(username=username)
         return generate_token(username=username,
                               password=password,
-                              password_hash=user.passsword,
+                              role='user',
+                              password_hash=user.password,
                               is_refresh=False), 201
 
     def put(self):
@@ -27,4 +28,5 @@ class AuthView(Resource):
         if not data.get("refresh_token"):
             return "", 400
 
-        return approve_token(data.get("refresh_token")), 200
+        return approve_token(data.get("refresh_token")), user_service, 200
+

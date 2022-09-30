@@ -18,7 +18,9 @@ class DirectorsView(Resource):
     @admin_required
     def post(self):
         data = request.json
-        return DirectorSchema().dump(director_service.create(data)), 201
+        director = director_service.create(data)
+        return "", 201, {"location": f"/directors/{director.id}"}
+
 
 @director_ns.route('/<int:rid>')
 class DirectorView(Resource):
@@ -31,11 +33,12 @@ class DirectorView(Resource):
     @admin_required
     def put(self, rid):
         data = request.json
-        if data.get('id') or (data.get('id') != rid):
-            data['id'] = rid
-
-        return director_service.update(data), 200
+        if "id" not in data:
+            data["id"] = rid
+        director_service.update(data)
+        return "", 204
 
     @admin_required
     def delete(self, rid):
-        return director_service.delete(rid), 200
+        director_service.delete(rid)
+        return "", 204
